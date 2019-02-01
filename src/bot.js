@@ -37,49 +37,81 @@ export function getNextSnakeMove(board, logger) {
 
     const sorround = getSorround(board, headPosition); // (LEFT, UP, RIGHT, DOWN)
 
-    console.log(sorround);
+    // console.log(sorround);
 
 
     logger('Sorround: ' + JSON.stringify(sorround));
 
     const raitings = sorround.map(rateElement);
     logger('Raitings:' + JSON.stringify(raitings));
+    //add choice if ELEMENT.NONE
+    alternative(raitings, headPosition);
 
     const command = getCommandByRaitings(raitings);
-
-    // getElementsXY(board, ELEMENT.APPLE);
-
 
     return command;
 }
 
-function deadLock (board){
-    for (var y = 0; y < getBoardSize(board); y++) {
-        for (var x = 0; x < getBoardSize(board); x++) {
-            if (getElementByXY(board, {x, y}) ===  ELEMENT.WALL)  getElementByXY(board, {x+1, y}) = ELEMENT.WALL;
-            // if ((getElementByXY(board, {x, y}) ===  ELEMENT.WALL) && (getElementByXY(board, {x, y+2}) ===  ELEMENT.WALL)) getElementByXY(board, {x, y+1}) = ELEMENT.WALL;
-        }
+function alternative(raitings, headPosition) {
+    let count = [];
+    let p = headPosition;
+    raitings.forEach(function(item, i) {
+        if (item == 0) count.push(i);
+    });
+
+    if (count.length>1) {
+        console.log('What can I do? I have '+count.length+' variants');
+        count.forEach(function (item, i, arr) {
+            switch (item) {
+                case 0:
+                    arr[i] = {i:0, x: p.x-1, y: p.y};
+                    break;
+                case 1:
+                    arr[i] = {i:1, x: p.x, y: p.y-1};
+                    break;
+                case 2:
+                    arr[i] = {i:2, x: p.x+1, y: p.y};
+                    break;
+                case 3:
+                    arr[i] = {i:3, x: p.x, y: p.y+1};
+                    break;
+                default: break;
+            }
+        });
+        // if (minDistance(board,ELEMENT.APPLE,count[i]).d )
     }
 }
 
+// return array with XY of all elements of current type
 function getElementsXY(board, element) {
     let elementXY = [];
     for (var y = 0; y < getBoardSize(board); y++) {
         for (var x = 0; x < getBoardSize(board); x++) {
-
             if (getElementByXY(board, {x, y}) ===  element) elementXY.push({'x':x,'y':y});
-            // console.log(elementXY);
         }
     }
+    return elementXY;
+}
+
+function minDistance(board, element, position) {
+    const p = position;
+    let elementXY = getElementsXY(board, ELEMENT.APPLE);
+    let dist = {};
+    dist.d=board.length;
+
+    for (let i=0; i<elementXY.length; i++) {
+        if (Math.hypot(elementXY[i].x-p.x, elementXY[i].y-p.y) < dist.d) dist = {"d":Math.hypot(elementXY[i].x-p.x, elementXY[i].y-p.y),"x":elementXY[i].x,"y":elementXY[i].y}
+    }
+    return dist;
 }
 
 function getSorround(board, position) {
     const p = position;
     return [
-        getElementByXY(board, {x: p.x - 1, y: p.y }), // LEFT
-        getElementByXY(board, {x: p.x, y: p.y -1 }), // UP
-        getElementByXY(board, {x: p.x + 1, y: p.y}), // RIGHT
-        getElementByXY(board, {x: p.x, y: p.y + 1 }) // DOWN
+        (getElementByXY(board, {x: p.x-1, y: p.y-1 }) === ELEMENT.WALL) && (getElementByXY(board, {x: p.x-1, y: p.y+1 }) === ELEMENT.WALL) ?  ELEMENT.WALL : getElementByXY(board, {x: p.x - 1, y: p.y }), // LEFT
+        (getElementByXY(board, {x: p.x-1, y: p.y-1 }) === ELEMENT.WALL) && (getElementByXY(board, {x: p.x+1, y: p.y-1 }) === ELEMENT.WALL) ?  ELEMENT.WALL : getElementByXY(board, {x: p.x, y: p.y -1 }), // UP
+        (getElementByXY(board, {x: p.x+1, y: p.y-1 }) === ELEMENT.WALL) && (getElementByXY(board, {x: p.x+1, y: p.y+1 }) === ELEMENT.WALL) ?  ELEMENT.WALL : getElementByXY(board, {x: p.x + 1, y: p.y}), // RIGHT
+        (getElementByXY(board, {x: p.x-1, y: p.y+1 }) === ELEMENT.WALL) && (getElementByXY(board, {x: p.x+1, y: p.y+1 }) === ELEMENT.WALL) ?  ELEMENT.WALL : getElementByXY(board, {x: p.x, y: p.y + 1 }) // DOWN
     ];
 }
 
@@ -89,12 +121,16 @@ function rateElement(element) {
     }
     if (
         element === ELEMENT.APPLE ||
-        element === ELEMENT.GOLD
+        element === ELEMENT.GOLD ||
+        element === ELEMENT.FURY_PILL ||
+        element === ELEMENT.FLYING_PILL
     ) {
         return 1;
     }
 
     return -1;
+
+
 }
 
 
