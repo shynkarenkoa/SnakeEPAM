@@ -45,18 +45,21 @@ export function getNextSnakeMove(board, logger) {
     const raitings = sorround.map(rateElement);
     logger('Raitings:' + JSON.stringify(raitings));
     //add choice if ELEMENT.NONE
-    alternative(raitings, headPosition);
+
+
+    (getElementsXY(board, ELEMENT.GOLD).length == 0) ? alternative(raitings, headPosition, board, ELEMENT.APPLE) : alternative(raitings, headPosition, board, ELEMENT.GOLD);
 
     const command = getCommandByRaitings(raitings);
 
     return command;
 }
 
-function alternative(raitings, headPosition) {
+function alternative(raitings, headPosition, board, element) {
     let count = [];
     let p = headPosition;
     raitings.forEach(function(item, i) {
         if (item == 0) count.push(i);
+        if (item == 1) count = [];
     });
 
     if (count.length>1) {
@@ -65,20 +68,32 @@ function alternative(raitings, headPosition) {
             switch (item) {
                 case 0:
                     arr[i] = {i:0, x: p.x-1, y: p.y};
+                    arr[i].d = minDistance(board,element,arr[i]).d;
                     break;
                 case 1:
                     arr[i] = {i:1, x: p.x, y: p.y-1};
+                    arr[i].d = minDistance(board,element,arr[i]).d;
                     break;
                 case 2:
                     arr[i] = {i:2, x: p.x+1, y: p.y};
+                    arr[i].d = minDistance(board,element,arr[i]).d;
                     break;
                 case 3:
                     arr[i] = {i:3, x: p.x, y: p.y+1};
+                    arr[i].d = minDistance(board,element,arr[i]).d;
                     break;
                 default: break;
             }
         });
-        // if (minDistance(board,ELEMENT.APPLE,count[i]).d )
+        console.log(count);
+
+        let index, min = board.length;
+        for (let j=0; j<count.length; j++){
+              if (count[j].d<min) {min = count[j].d; index = count[j].i;}
+        }
+        raitings[index] = 1;
+        console.log('I run to ' + getCommandByRaitings(raitings));
+
     }
 }
 
@@ -95,7 +110,7 @@ function getElementsXY(board, element) {
 
 function minDistance(board, element, position) {
     const p = position;
-    let elementXY = getElementsXY(board, ELEMENT.APPLE);
+    let elementXY = getElementsXY(board, element);
     let dist = {};
     dist.d=board.length;
 
